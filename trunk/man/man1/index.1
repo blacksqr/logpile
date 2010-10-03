@@ -1,0 +1,67 @@
+.TH index 1 1.4 "User Commands"
+.SH NAME
+index \- index logs into a xapian index
+.SH SYNOPSIS
+.LP
+.nf
+\fBindex\fR [\fB-g\fR \fIvariance in seconds\fR] [\fB-c\fR \fB-t\fR] 
+	[\fB-l\fR \fIlog level\fR]  \fB\fIlog file or fifo\fR\fR
+.fi
+.SH DESCRIPTION
+.sp
+.LP
+The \fBindex\fR utility indexes logfiles into xapian indexes.
+.SH OPTIONS
+.sp
+.LP
+The following options are supported:
+.sp
+.ne 2
+.mk
+.na
+\fB\fB-g\fR \fIvariance in seconds\fR\fR
+.ad
+.RS 17n
+.rt
+The \fIvariance in seconds\fR is the difference in seconds from the timestamp in the log message+offset. If the localtime is 04:01:00 and the local time offest is -4, a timestamp from 00:00:30 to 00:01:30 will adjusted to the localtime offset -4. This option only makes sense if index is reading logs realtime from a fifo.
+.RE
+.sp
+.ne 2
+.mk
+.na
+\fB\fB-c\fR\fR
+.ad
+.RS 17n
+.rt
+Enable autocommit. The current index will be committed on a periodic schedule.
+.RE
+.sp
+.ne 2
+.mk
+.na
+\fB\fB-t\fR\fR
+.ad
+.RS 17n
+.rt
+Enable tail port.
+.RE
+.sp
+.ne 2
+.mk
+.na
+\fB\fB-l\fR \fIlog level\fR\fR
+.ad
+.RS 17n
+.rt
+The \fIlog level\fR that will be used for logging. The following levels are available: debug, info, notice, warn, error, critical, alert, emergency.
+.RE
+.SH OPERANDS
+.sp
+.ne 2
+.mk
+.na
+\fB\fIlog file or fifo\fR\fR
+.ad
+.RS 17n
+.rt
+The logfile or fifo to index data from.

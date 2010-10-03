@@ -1,0 +1,53 @@
+#!/usr/bin/env tclsh8.5
+
+set s [info script]
+
+set basedir [format {%s/../} [file dirname $s]]
+set libdir [format {%slib/} $basedir]
+set confdir [format {%setc/} $basedir]
+set conffile [format {%slogpile.conf} $confdir]
+
+set auto_path "$auto_path $basedir"
+
+if { [catch {source $conffile}] } {
+
+	puts "Failed to read the config: $conffile"
+	exit 1
+}
+
+package require logpile
+package require cmdline
+
+set options [list  \
+	{l.arg	"emergency"	"loglevel" } \
+	{d.arg	""	"day to compact (could be yesterday or a date)" } \
+]	
+
+if { [catch {array set opts [::cmdline::getoptions argv $options ]} error] == 1 } {
+
+	puts [::cmdline::usage $options "<args> <path to index>"]
+	exit 1
+}
+
+set ::logpile::loglevel [lindex [array get opts l] 1]
+${::logpile::log}::setlevel $::logpile::loglevel
+
+set indexpath [lindex $argv 0]
+
+if { [set day [lindex [array get opts d] 1]] != "" } { 
+
+	set day [clock format [clock scan $day] -format {%Y/%m/%d} ]
+	set indexpath [format {%s/%s} $indexpath $day]
+
+} 
+
+if { [file isdirectory $indexpath] } {
+	
+	::logpile::indexCompactRecurse $indexpath
+} else {
+
+	puts "directory $indexpath doesn't exist"
+	exit 1
+}
+
+
