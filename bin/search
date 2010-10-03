@@ -1,0 +1,80 @@
+#!/usr/bin/env tclsh8.5
+
+set s [info script]
+
+set basedir [format {%s/../} [file dirname $s]]
+set libdir [format {%slib/} $basedir]
+set confdir [format {%setc/} $basedir]
+set conffile [format {%slogpile.conf} $confdir]
+
+set auto_path "$auto_path $basedir"
+
+if { [catch {source $conffile} error] } {
+
+	puts "$error\n"
+	puts "Failed to read the config: $conffile"
+	exit 1
+}
+
+package require logpile
+package require logpile::userfuncs
+package require cmdline
+
+set options [list  \
+	{o.arg	"::logpile::printResults"	"function to format the results" }  \
+	{m.arg	""	"minutes prior to now to search (for template)" }  \
+	{r.arg	""	"report template to run" } \
+	{l.arg	"emergency"	"loglevel" } \
+	{m.arg	""	"minutes in the past" } \
+	{r.arg	""	"template" } \
+	{t	"tail" } \
+]	
+
+if { [catch {array set opts [::cmdline::getoptions argv $options ]} error] == 1 } {
+
+	puts [::cmdline::usage $options $::logpile::usage_string]
+	exit 1
+}
+
+array set foo {}
+
+set function [lindex [array get opts o] 1]
+set template [lindex [array get opts r] 1]
+set tail [lindex [array get opts t] 1]
+set ::logpile::loglevel [lindex [array get opts l] 1]
+${::logpile::log}::setlevel [lindex [array get opts l] 1]
+set ::logpile::resultscount 0
+set minspast [lindex [array get opts m] 1]
+if { "" != $minspast  } {
+
+	set ::logpile::past [expr {[clock seconds] - [logpile::parseInputToSeconds $minspast]}]
+}
+
+set query [join $argv]
+
+if { "" != $template } {
+
+	if { ! [file exists $template] && [file exists [set tf [format {%stemplates/%s} $confdir $template]]] }  {
+		
+		set template $tf
+	}
+        set fp [open $template]
+        set t [read $fp]
+        close $fp
+        set message [subst $t]
+	puts $message
+} elseif { $tail } {
+	
+	set socket [socket localhost 9999]
+
+	while { -1 != [gets $socket line] } { 
+
+		if { [regexp $query $line] } {
+
+			puts $line
+		}
+	}
+} else {
+
+	::logpile::search $query foo -command $function
+}

@@ -1,0 +1,81 @@
+#!/usr/bin/env tclsh8.5
+
+package require smtp
+package require mime
+package require cmdline
+
+set s [info script]
+
+set basedir [format {%s/../} [file dirname $s]]
+set libdir [format {%slib/} $basedir]
+set confdir [format {%setc/} $basedir]
+set conffile [format {%slogpile.conf} $confdir]
+
+set auto_path "$auto_path $basedir"
+
+package require logpile
+package require logpile::userfuncs
+
+if { [catch {source $conffile}] } {
+
+        puts "Failed to read the config: $conffile"
+        exit 1
+} 
+
+set options [list  \
+	{o.arg	"::logpile::simple_format"	"function to format the results" }  \
+	{t.arg	""	"to email" }  \
+	[list f.arg [expr {[info exists ::logpile::conf::from_email] ? $::logpile::conf::from_email : ""}]  "from email"]  \
+	{s.arg	""	"subject" }  \
+	{m.arg	""	"minutes prior to now to search" }  \
+	{r.arg	""	"report template to run" } \
+]	
+
+if { [catch {array set opts [::cmdline::getoptions argv $options ]} error] == 1 \
+	||  "" eq [lindex [array get opts t] 1] 
+	||  "" eq [lindex [array get opts s] 1] 
+	||  "" eq [lindex [array get opts m] 1] 
+	} {
+
+	puts [::cmdline::usage $options $::logpile::usage_string]
+	exit 1
+}
+
+proc send_simple_message {sender recipient email_server subject body} {
+
+	set token [mime::initialize -canonical text/plain -string $body]
+	mime::setheader $token Subject $subject
+	smtp::sendmessage $token -recipients $recipient -servers $email_server -originator $sender
+	mime::finalize $token
+}
+
+set emails [lindex [array get opts t] 1] 
+set subject [lindex [array get opts s] 1] 
+set minspast [lindex [array get opts m] 1] 
+set from [lindex [array get opts f] 1] 
+set query [join $argv]
+set function [lindex [array get opts o] 1]
+set template [lindex [array get opts r] 1]
+set ::logpile::resultscount 0
+set ::logpile::past [expr {[clock seconds] - [logpile::parseInputToSeconds $minspast]}]
+
+if { "" == $template } {
+
+	set message [$function $query]
+} else {
+
+	if { ! [file exists $template] && [file exists [set tf [format {%stemplates/%s} $confdir $template]]] }  {
+
+		set template $tf
+	}
+	set fp [open $template]
+	set t [read $fp]
+	close $fp
+	set message [subst $t]
+
+}
+
+if { $::logpile::resultscount > 0  } {
+
+		send_simple_message $from $emails "localhost" $subject $message 
+}
