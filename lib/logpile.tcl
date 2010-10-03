@@ -347,12 +347,21 @@ proc ::logpile::guessDate {line linelist year hostpos args} {
 	#test for stupid windows 5 instead of 05
 	if { [lindex $linelist 1] == "" } {
 
-		set date [clock scan "[lindex $linelist 0] [lrange $linelist 2 3] $year" ]
+		#non-padded number
+		set date "[lindex $linelist 0] [lrange $linelist 2 3]" 
 		incr hp
 	} else {
 
-		set date [clock scan "[lrange $linelist 0 2] $year"  ]
+		#0 padded number
+		set date "[lrange $linelist 0 2]"  
 	}
+
+	#remove trailing : from apple syslog lines:
+	#Oct  2 00:32:52: --- last message repeated 1 time ---
+	set date [string trimright $date ":"]
+
+	#parse the date into a timestamp
+	set date [clock scan "$date $year"]
 
 	foreach a [array names ar] {
 
