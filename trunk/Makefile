@@ -1,6 +1,7 @@
 PREFIX=/usr
 
-BINS=bin/index bin/search bin/email_alert bin/index-compact
+BINPREFIX=""
+BINS=index search email_alert index-compact
 LIBS=lib/logpile.tcl lib/filetraverse_filters.tcl lib/timezoneutils.tcl lib/userFuncs.tcl
 CONFS=etc/logpile.conf etc/templates/users.report etc/templates/graph.report
 MANFILES=man/man1/search.1 man/man1/index.1
@@ -21,8 +22,8 @@ $(FILES): _a
 	@-cp $@ $(PREFIX)/$@
 
 $(BINS): _a
-	@-cp $@ $(PREFIX)/$@
-	@-chmod +x $(PREFIX)/$@
+	@-cp bin/$@ $(PREFIX)/bin/$(BINPREFIX)$@
+	@-chmod +x $(PREFIX)/bin/$(BINPREFIX)$@
 
 install_libs:  _a
 	./support/install.tcl $(LIBS) logpile
