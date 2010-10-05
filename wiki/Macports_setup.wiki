@@ -1,0 +1,26 @@
+#summary Setting up xapian for tcl via macports
+
+  # install tcl: 
+{{{
+port install tcl
+}}}
+  # Add a variant to: /opt/local//var/macports/sources/rsync.macports.org/release/ports/devel/xapian-bindings/Portfile
+{{{
+variant     tcl description {builds tcl bindings} {
+  configure.args-delete  --without-tcl
+  configure.args-append  --with-tcl
+  depends_lib-append port:tcl
+} 
+}}}
+  # install xapian-bindings: 
+{{{
+port install xapian-bindings +tcl
+}}}
+  # install tcllib: 
+{{{
+port install tcllib
+}}}
+  # fix the xapian library for tcl:
+{{{ 
+cp /opt/local//lib/xapian1.0.15/xapian.so /opt/local//lib/xapian1.0.15/xapian.dylib
+}}}
