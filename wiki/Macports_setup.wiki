@@ -22,5 +22,5 @@ port install tcllib
 }}}
   # fix the xapian library for tcl:
 {{{ 
-cp /opt/local//lib/xapian1.0.15/xapian.so /opt/local//lib/xapian1.0.15/xapian.dylib
+cp /opt/local/lib/xapian1.0.15/xapian.so /opt/local/lib/xapian1.0.15/xapian.dylib
 }}}
