@@ -1,0 +1,18 @@
+lappend auto_path ../lib
+package require logpile
+package require tcltest
+
+${::logpile::log}::setlevel emergency
+
+foreach {ver linelist pos host}  "
+
+	1	{Jan 30 05:29:28 10.100.2.240 :Link Up Trap for Unit/Port: 2 / 47}	3	10.100.2.240
+" {
+
+	::tcltest::test guessHost-$ver {test host guessing function} -body {
+
+		::logpile::guessHost $linelist $pos
+	} -result $host
+}
+
+::tcltest::cleanupTests

@@ -1,0 +1,28 @@
+lappend auto_path ../lib
+package require logpile
+package require tcltest
+
+${::logpile::log}::setlevel emergency
+
+foreach {ver line hostpos tag}  "
+
+	1	{Jan  1 00:03:31 host1.ad.example.com Security: 538: AD\\HOSTM$: User Logoff: User Name: HOSTM$ Domain: AD Logon ID: (0x0,0x1ABB7FBB) Logon Type: 3}	4	Security:
+	2	{Dec 31 23:59:37 host2.example.com 10.61.93.153 - Anonymous \[31/Dec/2009:23:59:37 -0400\] \"GET /favicon.ico HTTP/1.1\" 200 282 \"\" \"Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.20) Gecko/20081217 Firefox/2.0.0.20\"}	3	unknown
+	3	{Jan 16 20:58:53 host3.example.com named\[36527\]: unexpected RCODE (REFUSED) resolving \'NS3.bm/AAAA/IN\': 199.172.192.1#53}	3	named:
+	4	{Jan 16 21:26:56 10.1.2.1 NF host4 2010-Jan-16 21:26:58.293: NF-ALER-4084 TCP(6) 10.0.0.188:62014 10.0.0.155:25 - DENY \[NAT: No connection - drop quietly\]}	3	NF
+	5	{Jan 16 21:26:51 host5.example.com Mapper  No response from DNS 10.1.65.1 when resolving \'127.0.0.1\' to a name.}	3	Mapper
+	6	{Jan 16 21:26:48 host6.example.com client\[2935\]: \[ID 702911 auth.info\] INFO  Lost connection to example.com. }	3	client:
+	7	{Jan 16 21:26:53 host7.ad.example.com stunnel: LOG5\[17638:3086506896\]: xapi connected from 10.1.29.37:55751}	3	stunnel:
+	8	{Jan 16 21:26:47 host8.example.com 7372828: *Jan 16 19:56:49: %SEC-6-IPACCESSLOGP: list 100 denied udp 192.168.65.5(57218) -> 10.0.0.41(137), 1 packet}	3	unknown 
+	9	{Jan 16 21:26:42 host9.example.com 1263691470.246: HEARTBE-05-15000: cluster_peer_down: Received PEER_DOWN Event. Node State IDLE}	3	unknown 
+	10	{Jan 16 21:26:40 10.1.30.31 dcc\[5830\]: 01310040:4: \[SECEV\] Request violations: Illegal URL length. }	3	dcc: 
+	11	{Jan 16 21:26:38 host10.example.com snmpd\[3147\]: truncating integer value > 32 bits}	3	snmpd: 
+	" {
+
+	::tcltest::test guessTag-$ver {test tag guessing function} -body {
+
+		::logpile::guessTag $line [split $line] $hostpos
+	} -result $tag
+}
+
+::tcltest::cleanupTests

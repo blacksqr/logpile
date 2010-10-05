@@ -1,0 +1,19 @@
+lappend auto_path ../lib
+package require logpile
+package require tcltest
+
+${::logpile::log}::setlevel emergency
+
+foreach {ver startrange endrange matchto query resultquery }  "
+
+	1	1263490807	1263490808	0	{2010-01-14T12:40:07..2010-01-14T12:40:08  foo} {1263490807..1263490808  foo}
+" {
+
+	::tcltest::test setupDaterange-$ver {ver startrange endrange matchto query resultquery} -body {
+
+		::logpile::setupDaterange startrange endrange matchto query
+		return $query
+	} -result $resultquery
+}
+
+::tcltest::cleanupTests

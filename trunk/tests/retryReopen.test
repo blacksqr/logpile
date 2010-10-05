@@ -1,0 +1,32 @@
+lappend auto_path ../lib
+package require logpile
+package require tcltest
+
+${::logpile::log}::setlevel emergency
+
+proc traceC args {
+
+	if { [lindex $args 0] == "incr c" } { 
+		global traceCcounter
+		set traceCcounter [lindex $args 2]
+	}
+}
+
+proc dummy args {
+
+}
+
+::tcltest::test retryReopen-1 {test retry count} -body {
+
+	trace add execution incr {leave} traceC
+	catch {::logpile::retryReopen {sdlfkj } dummy 100}
+	trace remove execution incr {leave} traceC
+	return $traceCcounter
+} -result 100
+
+::tcltest::test retryReopen-2 {assert error is returned after retries on fail} -body {
+
+	return [catch {::logpile::retryReopen {sdlfkj } dummy 100} error]
+} -result 1
+
+::tcltest::cleanupTests
