@@ -1,0 +1,34 @@
+
+lappend auto_path ../lib
+package require logpile
+package require tcltest
+
+${::logpile::log}::setlevel emergency
+
+foreach {ver args result}  "
+
+	1	{-a test -b} {{-a test} {-b 1}}
+	2	{-a -b} {{-a 1} {-b 1}}
+	3	{-a -b test} {{-a 1} {-b test}}
+	4	{-foo -bar test} {{-foo 1} {-bar test}}
+" {
+
+	::tcltest::test parseargs-$ver {test parseargs} -body {
+
+		array set aaray {}
+		::logpile::parseargs aaray $args 
+		set rval ""
+		foreach n [array names aaray] { 
+
+			set foo ""
+			lappend foo $n
+			lappend foo $aaray($n)
+			lappend rval $foo
+		}
+		unset aaray
+		return $rval
+
+	} -result $result 
+}
+
+::tcltest::cleanupTests

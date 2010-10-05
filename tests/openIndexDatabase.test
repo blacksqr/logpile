@@ -1,0 +1,24 @@
+lappend auto_path ../lib
+package require logpile
+package require tcltest
+
+${::logpile::log}::setlevel emergency
+
+proc cleanup {db file} {
+
+	::logpile::closeIndexDatabase $db
+	file delete -force $file
+}
+
+::tcltest::test openIndexDatabase-1 {test opening an index database} -body {
+
+	set db [::logpile::openIndexDatabase testdb]
+	if { $db != "" } {
+
+		cleanup $db testdb
+		return 1
+	}
+	cleanup $db testdb
+} -result 1
+
+::tcltest::cleanupTests

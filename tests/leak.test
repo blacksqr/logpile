@@ -1,0 +1,47 @@
+lappend auto_path ../lib
+package require logpile
+package require tcltest
+
+${::logpile::log}::setlevel emergency
+
+set thisyear [clock format [clock seconds] -format {%Y}]
+
+set prerun [info commands]
+
+::tcltest::test leak-1 {test for leaks in index} -body {
+
+	::logpile::indexLogfile testdb data/forwardtest.log 0 emergency 1
+	set thisyear [clock format [clock seconds] -format {%Y}]
+	set nextyear [expr {$thisyear + 1}]
+
+	file delete -force testdb
+
+	return [info commands]
+
+}  -result $prerun
+
+::tcltest::test leak-2 {test for leaks in search returnresults} -body {
+
+	::logpile::indexLogfile testdb data/forwardtest-2009-12-31.log 0 emergency 1
+	array set a {}
+	::logpile::searchPath testdb "2009-12-31..2010-01-02 RESULTS:99999" a ::logpile::returnResults emergency
+	set fh [open data/forwardtest-2009-12-31.log]
+	fconfigure $fh -buffering line
+	file delete -force testdb
+	return [info commands]
+
+} -result $prerun
+
+#::tcltest::test leak-3 {test for leaks in search printresults} -body {
+#
+#	::logpile::indexLogfile testdb data/forwardtest-2009-12-31.log 0 emergency 1
+#	array set a {}
+#	::logpile::searchPath testdb "2009-12-31..2010-01-02 RESULTS:99999" a ::logpile::printResults emergency
+#	set fh [open data/forwardtest-2009-12-31.log]
+#	fconfigure $fh -buffering line
+#	file delete -force testdb
+#	return [info commands]
+#
+#} -result $prerun
+
+::tcltest::cleanupTests

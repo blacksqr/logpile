@@ -1,0 +1,17 @@
+lappend auto_path ../lib
+package require timezoneutils
+package require tcltest
+
+foreach {ver timestamp result}  "
+
+	january_2010	1262322000 -18000
+	june_2010	1275364800 -14400
+" {
+
+	::tcltest::test tzOffsetSeconds-$ver {test timezone offest in seconds function} -body {
+
+		::timezoneutils::tzOffsetSeconds $timestamp
+	} -result $result
+}
+
+::tcltest::cleanupTests
