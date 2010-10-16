@@ -1,0 +1,67 @@
+#!/usr/bin/env tclsh8.5
+
+set s [info script]
+
+set basedir [format {%s/../} [file dirname $s]]
+set libdir [format {%slib/} $basedir]
+set confdir [format {%setc/} $basedir]
+set conffile [format {%slogpile.conf} $confdir]
+
+set auto_path "$auto_path $basedir"
+
+if { [catch {source $conffile}] } {
+
+	puts "Failed to read the config: $conffile"
+	exit 1
+}
+
+package require logpile
+
+package require cmdline
+
+set options [list  \
+        {g.arg  "0"       ">0 enables gmt detection (for realtime indexing) value is seconds deviation from now" }  \
+        {l.arg  "emergency"     "loglevel" } \
+        {t	"enable tail server" } \
+        {c	"autocommit" } \
+]
+
+if { [catch {array set opts [::cmdline::getoptions argv $options ]} error] == 1 } {
+
+        puts [::cmdline::usage $options "<options> <logfile|fifo> \n"]
+        exit 1
+}
+
+set commit [lindex [array get opts c] 1]
+set loglevel [lindex [array get opts l] 1]
+set detectgmt [lindex [array get opts g] 1]
+set tailserver [lindex [array get opts t] 1]
+
+set ::logpile::loglevel $loglevel
+${::logpile::log}::setlevel $loglevel
+
+set indexFile [lindex $argv 0]
+
+proc tail_server {channel clientaddr clientport {called 0}} {
+
+	if { [catch {
+		if { ! $called } { 
+			::logpile::log_debug "connection from $clientaddr:$clientport" 
+			fconfigure $channel -buffering line
+		}
+		puts $channel $::logpile::indexingline
+		after 1 "tail_server $channel $clientaddr $clientport 1"
+	} error] } {
+
+		::logpile::log_debug "tail_server error: $error"
+		catch { close $channel }
+	}
+}
+
+if { $tailserver } {
+
+	::logpile::log_debug "enabling tail server"
+	socket -myaddr 127.0.0.1 -server tail_server 9999
+}
+
+::logpile::indexLogfile $::logpile::conf::indexpath $indexFile 0 $loglevel $commit $detectgmt

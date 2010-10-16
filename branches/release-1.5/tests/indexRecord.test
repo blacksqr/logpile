@@ -1,0 +1,48 @@
+
+lappend auto_path ../lib
+package require logpile
+package require tcltest
+package require xapian
+
+${::logpile::log}::setlevel emergency
+
+set document ""
+
+proc dbscaffold args {
+
+	global file line date hostname tag status
+
+	switch [lindex $args 0] {
+
+		add_document { 
+
+			set d [lindex $args 1]
+			set status 0
+			if { [expr {int([xapian::sortable_unserialise [$d get_value 1]])}] == $date && [$d get_value 3] == $hostname && [$d get_value 4] == $tag && [$d get_data] == [list $file $line] } { 
+
+				set status 1 
+			} else {
+				
+				set status [format "{%s %s} {%s %s} {%s %s} {%s %s}" [expr {int([xapian::sortable_unserialise [$d get_value 1]])}] $date [$d get_value 3] $hostname [$d get_value 4] $tag [$d get_data] [list $file $line] ]
+			}				
+		}
+	}
+}
+
+
+foreach {ver file line date hostname tag}  "
+
+	1	test.file testline	1262585280	hostname	tag	
+	2	test.file {Jan  1 00:03:31 host1.ad.example.com Security: 538: AD\\HOST1$: User Logoff: User Name: HOST1$ Domain: AD Logon ID: (0x0,0x1ABB7FBB) Logon Type: 3}	1262585280	hostname	tag	
+" {
+
+
+	::tcltest::test indexRecord-$ver {test file record function} -body {
+
+		::logpile::indexRecord dbscaffold $file $line $date $hostname $tag
+
+		return $status
+	} -result 1
+}
+
+::tcltest::cleanupTests

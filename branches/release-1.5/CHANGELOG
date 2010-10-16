@@ -1,0 +1,27 @@
+1.5 ========================================
+- fixed osx related bug where syslog timestamps having a trailing :
+1.4 ========================================
+- fixed bug that caused autocommits to be registered for every index
+  file change
+- added gmt detection for realtime indexing
+- index-compact now only compacts past days. fixes issues where it compacted 
+  data from the "future" when devices log in utc
+1.3 ========================================
+- added a manpage for search
+- fixed annoying bug with PAST tag that required it to be at the beginning of a query
+- added network log server (port 9999)
+1.2 ========================================
+- added some basic attempts at graphing
+- added error handling to attempt to reopen actively changing databases
+1.1 ========================================
+- added PAST query works like -m
+- clean up some tag guessing to remove some nonsense data from the tag fields
+- -m now takes time labels y for year d for day etc...
+- works in tcl 8.4 now (ubuntu)
+- joined argv after args to allow unquoted searches
+- batching of search resultsets to reduce memory footprint of large searches
+- major cleanup of search leaks 
+- replaced transactions in autocommit with flushes on a timer
+- allow template paths to be specified relative to templates dir
+1.0 ========================================
+- initial release

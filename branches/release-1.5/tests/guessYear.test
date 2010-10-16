@@ -1,0 +1,21 @@
+lappend auto_path ../lib
+package require logpile
+package require tcltest
+
+${::logpile::log}::setlevel emergency
+
+set thisyear [clock format [clock seconds] -format {%Y}]
+
+foreach {ver filename year}  "
+
+	1	foo.fifo	$thisyear
+	2	hostname-2009-01-01	2009
+" {
+
+	::tcltest::test guessYear-$ver {test year guessing function} -body {
+
+		::logpile::guessYear $filename
+	} -result $year
+}
+
+::tcltest::cleanupTests

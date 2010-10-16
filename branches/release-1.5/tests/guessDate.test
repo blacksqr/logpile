@@ -1,0 +1,31 @@
+lappend auto_path ../lib
+package require logpile
+package require tcltest
+package require timezoneutils
+
+${::logpile::log}::setlevel emergency
+
+foreach {ver line year hostpos result}  {
+
+	1	{Jan 18 18:57:20 host1.example.com osirisd[5473]: [ID 702911 daemon.info] [info] changing state to: idle}	2010	4 1263859040
+	2	{Jan  1 03:02:21 host2.example.com Security: 538: AD\\HOST3$: User Logoff: User Name: HOST3$ Domain: AD Logon ID: (0x0,0x99495EF) Logon Type: 3}	2010	4 1262332941
+	3	{Oct  2 00:32:52: --- last message repeated 1 time ---}	2010	4 1285993972
+} {
+
+	::tcltest::test guessDate-$ver {test date guessing function} -body {
+
+		::logpile::guessDate $line [split $line] $year hostpos 
+	} -result $result
+}
+
+::tcltest::test guessDate_detectGmt-1 {test realtime gmt detection} -body {
+
+	set now [clock seconds]
+	set line [format {%s host1.example.com osirisd[5473]: [ID 702911 daemon.info] [info] changing state to: idle} [clock format $now -format {%h %d %H:%M:%S} -gmt 1]]
+	set year [clock format $now -format {%Y} -gmt 1]
+
+	set result [::logpile::guessDate $line [split $line] $year 4 -detectgmt 300]
+
+	expr { $result == $now }
+} -result 1
+::tcltest::cleanupTests

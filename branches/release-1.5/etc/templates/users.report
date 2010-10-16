@@ -1,0 +1,14 @@
+-----------------------------------successful logins-----------------------------------
+[usersbyhost {(TAG:sshd (opened OR accepted) for NOT "invalid user") OR (TAG:proftpd login) OR (User32 TAG:security "logon type 10" "Successful Logon") RESULTS:9999999} ]
+
+-----------------------------------  invalid users  -----------------------------------
+[usersbyhost {(TAG:sshd "failed password for" AND ("invalid user" OR "illegal user")) OR (TAG:proftpd login failed incorrect) RESULTS:9999999} ]
+
+-----------------------------------  failed logins  -----------------------------------
+[usersbyhost {(TAG:sshd "failed password for" NOT "invalid user" NOT "illegal user") OR (TAG:proftpd login failed invalid) OR (user32 TAG:security failure "logon type 10" ) RESULTS:9999999} ]
+
+-----------------------------------  locked accounts  -----------------------------------
+[usersbyhost {TAG:security locked}]
+
+-----------------------------------password rotations-----------------------------------
+[usersbyhost {"changed password for" RESULTS:9999999} ]

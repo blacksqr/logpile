@@ -1,0 +1,68 @@
+
+lappend auto_path ../lib
+package require logpile
+package require tcltest
+
+${::logpile::log}::setlevel emergency
+
+::tcltest::test indexLogfile-1 {test year forward change} -body {
+
+	::logpile::indexLogfile testdb data/forwardtest.log 0 emergency 1
+	set thisyear [clock format [clock seconds] -format {%Y}]
+	set nextyear [expr {$thisyear + 1}]
+	if { [file isdirectory testdb/$thisyear] && [file isdirectory testdb/$nextyear] } {
+
+		file delete -force testdb
+		return 1
+	}
+	file delete -force testdb
+
+} -result 1
+
+::tcltest::test indexLogfile-2 {test year backward (out of order logs at year end)} -body {
+
+	::logpile::indexLogfile testdb data/backwardtest.log 0 emergency 1
+	set thisyear [clock format [clock seconds] -format {%Y}]
+	set lastyear [expr {$thisyear - 1}]
+	if { [file isdirectory testdb/$thisyear] && [file isdirectory testdb/$lastyear] } {
+
+		file delete -force testdb
+		return 1
+	}
+	file delete -force testdb
+
+} -result 1
+
+::tcltest::test indexLogfile-3 {test to make sure content makes it into the index} -body {
+
+	::logpile::indexLogfile testdb data/forwardtest-2009-12-31.log 0 emergency 1
+	array set a {}
+	::logpile::searchPath testdb "2009-12-31..2010-01-02 RESULTS:99999" a ::logpile::returnResults emergency
+	set fh [open data/forwardtest-2009-12-31.log]
+	fconfigure $fh -buffering line
+	set count 0
+	while { [gets $fh line] >= 0 } {
+
+		set match 0
+		foreach n [array names a] {
+
+			if { [lindex [lindex $a($n) 3] 1] == $line } {
+
+				set match 1
+			}
+		}
+		if { $match != 1 } {
+
+			file delete -force testdb
+			close $fh
+			return "matched $count; couldn't find match for [lindex [lindex $a($n) 3] 1]"
+		}
+		incr count
+	}
+	close $fh
+	file delete -force testdb
+	return 1
+
+} -result 1
+
+::tcltest::cleanupTests

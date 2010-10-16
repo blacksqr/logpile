@@ -1,0 +1,46 @@
+lappend auto_path ../lib
+package require logpile
+package require tcltest
+
+${::logpile::log}::setlevel emergency
+
+
+foreach {ver input output}  "
+
+	1	1d	86400	
+	2	2d	172800
+	3	1h	3600
+	4	2h	7200
+	5	1m	60
+	6	2m	120
+	7	1M	2678400
+	8	2M	5356800
+	9	1y	31536000
+	10	2y	63072000
+	11	1s	1
+	12	2s	2
+	13	1	60
+	14	2	120
+	15	10d	864000
+	15	10m	600
+" {
+
+	::tcltest::test parseInputToSeconds-$ver {test time unit measurement parsing} -body {
+
+		::logpile::parseInputToSeconds $input
+	} -result $output
+}
+
+::tcltest::test parseInputToSeconds-badinput1 {test completely invalid input} -body {
+		
+		catch {::logpile::parseInputToSeconds "badinput"} error
+		return $error
+} -result -2
+
+::tcltest::test parseInputToSeconds-badinput1 {test valid formatted input, with an invalid label} -body {
+		
+		catch {::logpile::parseInputToSeconds 1f} error
+		return $error
+} -result -1
+
+::tcltest::cleanupTests
