@@ -1,4 +1,4 @@
-package provide logpile 1.4
+package provide logpile 1.5
 
 package require Tcl
 package require logger
@@ -573,8 +573,8 @@ proc ::logpile::searchPath {dbpath query aresults {command returnResults} {logle
 			incr totalindexes $dbcount
 			incr matches [doSearch $databases $query results $matchto $matches $command]
 
-			#::logpile::cleanup
 			$databases -delete
+			#::logpile::cleanup
 
 			set databases [::xapian::Database]
 			set dbcount 0
@@ -867,23 +867,27 @@ proc ::logpile::doSearch {databases userquery aresults matchto matchcount comman
 		retryReopen { set matches [$enquire get_mset $x 100000] } $databases 100
 
 		#got no results exit
-		if { [$matches size] <= 0 } { log_debug "mset size <= 0, done" ; break }
+		if { [$matches size] > 0 } { 
 
-		#fetch results
-		for {set i [$matches begin]} { $matchcount < $matchto && ( ![$i equals [set ms [$matches end]]] ) } { retryReopen {$i next} $databases 100 } {
+			#fetch results
+			for {set i [$matches begin]} { $matchcount < $matchto && ( ![$i equals [set ms [$matches end]]] ) } { retryReopen {$i next} $databases 100 } {
 
-			retryReopen { $command $i $matchcount results } $databases 100
-			incr thismatchcount
-			incr matchcount
-			rename $ms ""
+				retryReopen { $command $i $matchcount results } $databases 100
+				incr thismatchcount
+				incr matchcount
+				rename $ms ""
+			}
+			catch { rename $ms "" }
+			rename $i ""
+		} else {
+
+			set x [expr $matchto + 1]
+			log_debug "mset size <= 0, done"
 		}
-		catch { rename $ms "" }
-		rename $i ""
 		rename $matches ""
 	}
-
 	rename $enquire ""
-		# The revision being read has been discarded - you should call Xapian::Database::reopen() and retry the operation
+
 return $thismatchcount
 }
 
