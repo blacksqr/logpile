@@ -1,0 +1,14 @@
+#summary Setup instructions and required software
+
+= Required Software =
+
+[http://www.tcl.tk/ tcl 8.5.x]
+
+[http://xapian.org/ xapian 1.0.x (and xapian-bindings)]
+
+[http://www.tcl.tk/software/tcllib/ tcllib]
+
+
+= Setup = 
+
+[Macports_setup setup on a Mac with MacPorts]
