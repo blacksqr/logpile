@@ -1,5 +1,6 @@
 1.5 ========================================
 - fixed osx related bug where syslog timestamps having a trailing :
+- cleaned up search so cleanup isn't called anymore
 1.4 ========================================
 - fixed bug that caused autocommits to be registered for every index
   file change

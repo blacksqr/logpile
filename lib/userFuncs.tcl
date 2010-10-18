@@ -146,8 +146,10 @@ proc returnResultsOverTime {iterator matchcount aresults} {
 	rename $doc ""
 }
 
-proc printResultsOverTime {query} {
+proc getResultsOverTime {query bkt_nms res} {
 
+	upvar 1 $res results
+	upvar 1 $bkt_nms bucket_names
 	set q $query
 
 	::logpile::setupDaterange begin end matchto q
@@ -160,6 +162,11 @@ proc printResultsOverTime {query} {
 	set rows [expr {int(ceil([term::ansi::ctrl::unix::rows]-13.0))}]
 
 	set max 0
+}
+
+proc printResultsOverTime {query} {
+
+	getResultsOverTime $query bucket_names results
 
 	foreach x $bucket_names {
 

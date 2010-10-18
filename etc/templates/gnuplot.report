@@ -1,0 +1,21 @@
+[
+package require uuid
+set filename [format "/tmp/%s" [uuid::uuid generate]]
+set plotFile [open $filename w]
+getResultsOverTime $query bucket_names results
+foreach x $bucket_names {
+
+	puts $plotFile "[array get results $x]"
+}
+close $plotFile
+set plotCmd [open "|gnuplot" w]
+puts $plotCmd {set timefmt x "%s"}
+puts $plotCmd {set xdata time}
+if { [info exists ::logpile::conf::template_outfile] } {
+	puts $plotCmd {set term svg}
+	puts $plotCmd [format {set out "%s"} $::logpile::conf::template_outfile]
+}
+puts $plotCmd [format {plot "%s" using 1:2 title "%s" with lines} $filename $query]
+close $plotCmd
+file delete $filename
+]
