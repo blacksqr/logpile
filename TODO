@@ -1,1 +1,3 @@
-refactor to allow multiple indexes or searches
+-refactor to allow multiple indexes or searches
+-a method for 2 instances results to be combined (either at query time or
+ potentially as a periodic index merge)
