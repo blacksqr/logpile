@@ -1,0 +1,21 @@
+[gnuplotResultsOverTime $query {
+
+	set title "objects"
+	set xdata time
+	set timefmt x "%s"
+	set format x "%m/%y"
+	set format y "%12.0f"
+	set key right bottom
+	set datafile missing 'NaN'
+	GNUTERM = "aqua"
+	TITLE = "log events"
+	set term png
+	set output "output.png"
+	set style line 1 pt 7 pi -0.7 ps .5
+	set style line 2 pt 7 pi -0.7 ps .5
+
+} {
+
+	plot '-' using 1:2 title "results over time" with linespoints ls 1
+
+}]
