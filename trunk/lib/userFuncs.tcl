@@ -49,6 +49,44 @@ proc returnUsersByHost {iterator matchcount aresults} {
         rename $doc ""
 }
 
+proc gnuplotResultsOverTime {query plotSetup plot} {
+
+	array set results {}
+
+	set q $query
+
+	::logpile::setupDaterange begin end matchto q
+
+	set diff [expr {$end-$begin}]
+	#10000 plot points
+	set incr [expr {int(ceil($diff/1000))}]
+	logpile::userfuncs::setupBucketsResultsOverTime $begin $end $incr bucket_names results
+
+	::logpile::search $query results -command returnResultsOverTime
+	set rows [expr {int(ceil([term::ansi::ctrl::unix::rows]-13.0))}]
+
+	set max 0
+
+	foreach x $bucket_names {
+
+		if { $results($x) > $max } { set max $results($x) }
+	}
+
+	set ploth [open "|gnuplot" RDWR]
+
+	fconfigure $ploth -blocking 0
+
+	puts $ploth $plotSetup
+	puts $ploth $plot
+
+	set resp [read $ploth]
+
+	foreach x $bucket_names {
+
+		puts $ploth "$x $results($x)"
+		set resp [read $ploth]
+	}
+}
 
 proc graphResultsOverTime {query} {
 
