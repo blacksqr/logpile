@@ -1,4 +1,4 @@
-package provide logpile 1.4
+package provide logpile 1.5
 
 package require Tcl
 package require logger
@@ -545,7 +545,7 @@ proc ::logpile::searchPath {dbpath query aresults {command returnResults} {logle
 	set endrange 0
 	set dbcount 0
 	set x 0
-	set databases [::xapian::Database databases]
+	set databases [::xapian::Database]
 	set start [clock seconds]
 	set matches 0
 	set totaldoccount 0
@@ -573,15 +573,15 @@ proc ::logpile::searchPath {dbpath query aresults {command returnResults} {logle
 			incr totalindexes $dbcount
 			incr matches [doSearch $databases $query results $matchto $matches $command]
 
-			::logpile::cleanup
+			$databases -delete
+			#::logpile::cleanup
 
-			set databases [::xapian::Database databases]
+			set databases [::xapian::Database]
 			set dbcount 0
 		}
 	}
 
 	$databases -delete
-	databases -delete
 
 	log_info "$matches results found"
 	set stop [clock seconds]
@@ -719,12 +719,13 @@ proc ::logpile::addDb {databases dbpath dbcount x } {
 	if { [::logpile::testDbPath dbpath x] } {
 
 		log_debug "adding index $dbpath"
-		set d [::xapian::Database ::logpile::xapiandb "$dbpath"]
+		set d [::xapian::Database "${databases}_d" "$dbpath"]
 		#look here for problems
-		$d -delete
-		incr totaldoccount [::logpile::xapiandb get_doccount]
+		incr totaldoccount [$d get_doccount]
 		incr dbcount	
-		$databases add_database ::logpile::xapiandb
+		$databases add_database $d
+		$d -delete
+		"${databases}_d" -delete
 	}
 
 return [list $dbcount $x $totaldoccount]
@@ -778,30 +779,31 @@ return $thismatchcount
 proc ::logpile::setupQuery {databases userquery} {
 
 	log_debug "Building query"
-	set numberrange [xapian::NumberValueRangeProcessor new 1]
-	set qp [xapian::QueryParser qparse]
-	qparse add_prefix "HOST" "HOST"
-	qparse add_prefix "TAG" "TAG"
-	qparse set_default_op $::xapian::Query_OP_AND
-	set enq [xapian::Enquire enquire $databases]
-	enquire set_sort_by_value 1 0
-	enquire set_weighting_scheme [xapian::BoolWeight]
-	qparse add_valuerangeprocessor $numberrange
-	qparse set_database $databases
-	#$qp set_stemmer estem
-	set query [qparse parse_query $userquery [expr $::xapian::QueryParser_FLAG_WILDCARD | $::xapian::QueryParser_FLAG_DEFAULT ] ]
+	set numberrange [xapian::NumberValueRangeProcessor "${databases}_nvrp" 1]
+	set qp [xapian::QueryParser]
+	$qp add_prefix "HOST" "HOST"
+	$qp add_prefix "TAG" "TAG"
+	$qp set_default_op $::xapian::Query_OP_AND
+	set enq [xapian::Enquire "${databases}_enquire" $databases]
+	$enq set_sort_by_value 1 0
+	set bw [xapian::BoolWeight]
+	$enq set_weighting_scheme $bw
+	$bw -delete
+	$qp add_valuerangeprocessor $numberrange
+	$numberrange -delete
+	$qp set_database $databases
+	set query [$qp parse_query $userquery [expr $::xapian::QueryParser_FLAG_WILDCARD | $::xapian::QueryParser_FLAG_DEFAULT ] ]
 
 	log_debug "Performing query [$query get_description]"
 
-	enquire set_query $query
+	$enq set_query $query
 
 	rename $query ""
-	rename qparse ""
 	rename $enq ""
 	rename $qp ""
-	rename new ""
+	rename "${databases}_nvrp" ""
 
-return enquire
+return "${databases}_enquire"
 }
 
 #function to generate an array of search results
@@ -856,28 +858,36 @@ proc ::logpile::doSearch {databases userquery aresults matchto matchcount comman
 	upvar 1 $aresults results
 	set thismatchcount 0
 
+	#run the query
 	retryReopen { set enquire [::logpile::setupQuery $databases $userquery] } $databases 100
 
+	#handle results
 	for { set x 0 } { $x <= $matchto } { incr x 100000 } {
 
 		retryReopen { set matches [$enquire get_mset $x 100000] } $databases 100
 
-		if { [$matches size] <= 0 } { log_debug "mset size <= 0, done" ; break }
+		#got no results exit
+		if { [$matches size] > 0 } { 
 
-		for {set i [$matches begin]} { $matchcount < $matchto && ( ![$i equals [set ms [$matches end]]] ) } { retryReopen {$i next} $databases 100 } {
+			#fetch results
+			for {set i [$matches begin]} { $matchcount < $matchto && ( ![$i equals [set ms [$matches end]]] ) } { retryReopen {$i next} $databases 100 } {
 
-			retryReopen { $command $i $matchcount results } $databases 100
-			incr thismatchcount
-			incr matchcount
-			rename $ms ""
+				retryReopen { $command $i $matchcount results } $databases 100
+				incr thismatchcount
+				incr matchcount
+				rename $ms ""
+			}
+			catch { rename $ms "" }
+			rename $i ""
+		} else {
+
+			set x [expr $matchto + 1]
+			log_debug "mset size <= 0, done"
 		}
-		catch { rename $ms "" }
-		rename $i ""
 		rename $matches ""
 	}
-
 	rename $enquire ""
-		# The revision being read has been discarded - you should call Xapian::Database::reopen() and retry the operation
+
 return $thismatchcount
 }
 

@@ -44,4 +44,16 @@ set prerun [info commands]
 #
 #} -result $prerun
 
+::tcltest::test leak-4 {test for leaks in empty results accross multiple dbs} -body {
+
+	::logpile::indexLogfile testdb data/forwardtest-2009-12-31.log 0 emergency 1
+	::logpile::indexLogfile testdb data/forwardtest-2009-12-30.log 0 emergency 1
+
+	::logpile::searchPath testdb "2009-12-30..2009-12-31 NOT:foo" a ::logpile::printResults emergency
+	file delete -force testdb
+
+	return [info commands]
+
+} -result $prerun
+
 ::tcltest::cleanupTests

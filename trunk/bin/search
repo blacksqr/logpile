@@ -27,6 +27,7 @@ set options [list  \
 	{l.arg	"emergency"	"loglevel" } \
 	{m.arg	""	"minutes in the past" } \
 	{r.arg	""	"template" } \
+	{ro.arg	""	"template options eg: -ro \"option1=value,option2=value\"" } \
 	{t	"tail" } \
 ]	
 
@@ -40,6 +41,11 @@ array set foo {}
 
 set function [lindex [array get opts o] 1]
 set template [lindex [array get opts r] 1]
+foreach o [split [lindex [array get opts ro] 1] ","] {
+
+	set p [split $o "="]
+	set ::logpile::conf::template_[lindex $p 0] [lindex $p 1]
+}
 set tail [lindex [array get opts t] 1]
 set ::logpile::loglevel [lindex [array get opts l] 1]
 ${::logpile::log}::setlevel [lindex [array get opts l] 1]

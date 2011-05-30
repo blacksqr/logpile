@@ -8,7 +8,7 @@
 # script is sourced, the variable $dir must contain the
 # full path name of this file's directory.
 
-package ifneeded logpile 1.4 [list source [file join $dir logpile.tcl]]
+package ifneeded logpile 1.5 [list source [file join $dir logpile.tcl]]
 package ifneeded logpile::filetraverse 1.1 [list source [file join $dir filetraverse_filters.tcl]]
 package ifneeded timezoneutils 1.0 [list source [file join $dir timezoneutils.tcl]]
 package ifneeded logpile::userfuncs 1.0 [list source [file join $dir userFuncs.tcl]]
