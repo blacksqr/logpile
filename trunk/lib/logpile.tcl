@@ -1026,3 +1026,19 @@ proc ::logpile::retryReopen {command database {count 0}} {
 		$database reopen
 	}
 }
+
+#return a default value if variable doesn't exist
+#
+#@param variable name
+#@param default value
+#
+proc ::logpile::val {var def} {
+
+	if { ! [info exists $var] } {
+
+		return $def
+	} else { 
+
+		return [set [set var]]
+	}
+} 

@@ -1,21 +1,18 @@
-[gnuplotResultsOverTime $query {
+[gnuplotResultsOverTime $query " 
 
-	set title "objects"
+	set title 'log events'
 	set xdata time
-	set timefmt x "%s"
-	set format x "%m/%y"
-	set format y "%12.0f"
-	set key right bottom
+	set timefmt x '%s'
+	set format x '%m/%y'
+	set format y '%12.0f'
+	set key right top
 	set datafile missing 'NaN'
-	GNUTERM = "aqua"
-	TITLE = "log events"
+	GNUTERM = 'aqua'
 	set term png
-	set output "output.png"
 	set style line 1 pt 7 pi -0.7 ps .5
 	set style line 2 pt 7 pi -0.7 ps .5
-
-} {
-
-	plot '-' using 1:2 title "results over time" with linespoints ls 1
-
+	set output '[::logpile::val ::logpile::conf::template::output "output.png"]'
+" {
+	plot '-' using 1:2 title "results over time" with linespoints ls 1 
 }]
+

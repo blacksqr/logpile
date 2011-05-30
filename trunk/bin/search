@@ -44,7 +44,7 @@ set template [lindex [array get opts r] 1]
 foreach o [split [lindex [array get opts ro] 1] ","] {
 
 	set p [split $o "="]
-	set ::logpile::conf::template_[lindex $p 0] [lindex $p 1]
+	set ::logpile::conf::template::[lindex $p 0] [lindex $p 1]
 }
 set tail [lindex [array get opts t] 1]
 set ::logpile::loglevel [lindex [array get opts l] 1]
