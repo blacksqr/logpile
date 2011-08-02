@@ -719,13 +719,15 @@ proc ::logpile::addDb {databases dbpath dbcount x } {
 	if { [::logpile::testDbPath dbpath x] } {
 
 		log_debug "adding index $dbpath"
-		set d [::xapian::Database "${databases}_d" "$dbpath"]
-		#look here for problems
-		incr totaldoccount [$d get_doccount]
-		incr dbcount	
-		$databases add_database $d
-		$d -delete
-		"${databases}_d" -delete
+		if { ! [catch {set d [::xapian::Database "${databases}_d" "$dbpath"]} ] } {
+
+			#look here for problems
+			incr totaldoccount [$d get_doccount]
+			incr dbcount	
+			$databases add_database $d
+			$d -delete
+			"${databases}_d" -delete
+		}
 	}
 
 return [list $dbcount $x $totaldoccount]
