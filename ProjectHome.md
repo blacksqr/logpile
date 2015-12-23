@@ -1,0 +1,1 @@
+Tcl and [Xapian](http://xapian.org/) based log indexing and search system.
